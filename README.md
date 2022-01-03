@@ -18,3 +18,6 @@ This branch contains terraform code to provision a single node Rancher server. T
 3. After provisioning, access to Rancher server will be available (https://rancher.webmod.private)
 ###Removal
 1. Run `terraform destroy -var kubeconfig_path=</path/to/kubeconfig> -var ssh_key_path=</path/to/rancher/ec2/private/key> -var rancher_password=<SuperStrongPassword>`<br>
+
+##IN-PROGRESS
+Add networking (VPC,subnet,NAT gateway, etc.) and Route53 (webmod.private private hosted zone) infrastructure  
