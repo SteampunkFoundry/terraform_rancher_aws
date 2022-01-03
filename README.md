@@ -1,7 +1,7 @@
 # Webmod's Single Node Rancher Server
 This branch contains terraform code to provision a single node Rancher server. This Rancher server is used by Webmod to create a development Kubernetes cluster.
 
-**This infrastructure has already been deployed.** The EC2 instance ssh key and Rancher administrator password are stored in AWS Secrets Manager.
+**This infrastructure has already been deployed.** The EC2 instance ssh key and Rancher administrator password are stored in AWS Secrets Manager. <br>
 ###Prerequisites
 1. Active Wireguard configuration to Webmod AWS environment
 2. AWS CLI credentials with ec2 and security group creation access
