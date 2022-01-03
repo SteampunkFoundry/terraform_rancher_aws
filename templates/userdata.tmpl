@@ -1,0 +1,15 @@
+#!/bin/bash -x
+export DEBIAN_FRONTEND=noninteractive
+
+echo "Patch host"
+apt-get update
+apt-get upgrade -y
+
+echo "Install Docker"
+curl -sL https://releases.rancher.com/install-docker/${docker_version}.sh | sh
+usermod -aG docker ${username}
+
+echo "Install k3s"
+curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=${k3s_version} sh -s - server
+cp /etc/rancher/k3s/k3s.yaml /home/ubuntu/k3s.yaml
+chown ${username}: /home/ubuntu/k3s.yaml
