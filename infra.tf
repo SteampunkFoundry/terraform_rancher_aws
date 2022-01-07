@@ -45,7 +45,12 @@ module "rancher_server" {
   vpc_security_group_ids = [module.rancher_server_sg.security_group_id]
   subnet_id              = var.subnet_id
 
-  tags = var.tags
+  tags = merge(
+    {
+      "CustodianOffHours" = "true",
+      "CustodianOnHours"  = "true"
+    },
+    var.tags)
 
   depends_on = [
     module.rancher_server_sg,
