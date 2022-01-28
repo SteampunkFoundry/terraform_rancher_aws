@@ -4,7 +4,7 @@ data "aws_ami" "ubuntu_20_04" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/*ubuntu-focal-20.04-amd64-server-*"]
+    values = ["ubuntu/images/*ubuntu-focal-20.04-amd64-server-20211129"]
   }
   filter {
     name   = "architecture"
@@ -47,8 +47,8 @@ module "rancher_server" {
 
   tags = merge(
     {
-      "CustodianOffHours" = "true",
-      "CustodianOnHours"  = "true"
+      "CustodianOffHours" = "off",
+      "CustodianOnHours"  = "off"
     },
     var.tags)
 
