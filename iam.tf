@@ -99,6 +99,27 @@ resource "aws_iam_user_policy" "rancher_user_policy" {
           "ec2:StopInstances"
         ],
         "Resource": "arn:aws:ec2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:instance/*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "route53:GetHostedZone",
+          "route53:GetHostedZoneCount",
+          "route53:ListHostedZonesByName",
+          "route53:ListResourceRecordSets"
+        ],
+        "Resource": [
+          "*"
+        ]
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "route53:ChangeResourceRecordSets"
+        ],
+        "Resource": [
+          data.aws_route53_zone.dns.arn
+        ]
       }
     ]
   })

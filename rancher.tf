@@ -116,3 +116,15 @@ resource "rancher2_node_template" "node_template" {
     tags = "Rancher Provisioned,true"
   }
 }
+
+resource "rancher2_global_dns_provider" "route53" {
+  provider = rancher2.admin
+  name = "route53"
+  root_domain = "webmod.private"
+  route53_config {
+    access_key = rancher2_cloud_credential.cloud_credential.amazonec2_credential_config[0].access_key
+    secret_key = rancher2_cloud_credential.cloud_credential.amazonec2_credential_config[0].secret_key
+    zone_type = "private"
+    region = "us-east-1"
+  }
+}

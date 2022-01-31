@@ -24,7 +24,9 @@ data "aws_instance" "rancher_instance" {
 data "aws_kms_alias" "ebs" {
   name = "alias/aws/ebs"
 }
-
+data "aws_route53_zone" "dns" {
+  zone_id = "Z05090091HKD7D2WOJUY7"
+}
 resource "aws_instance" "rancher_server" {
   ami                    = data.aws_ami.ubuntu_20_04.id
   instance_type          = var.instance_type
