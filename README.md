@@ -4,7 +4,7 @@ This branch contains terraform code to provision a single node Rancher server. T
 **This infrastructure has already been deployed.** The EC2 instance ssh key and Rancher administrator password are stored in AWS Secrets Manager.
 ### Prerequisites
 1. Active Wireguard configuration to Webmod AWS environment
-2. AWS CLI credential profile via SSO with admin access
+2. Active AWS CLI credential profile via SSO with admin access
 3. Set the s3 backend:
 ```terraform
 terraform {
@@ -51,7 +51,7 @@ Destroy complete! Resources: 25 destroyed.
 ```
 
 ## IN-PROGRESS
-Addition of code to provision networking (VPC,subnet,NAT gateway, etc.) and DNS (Route53 - private hosted zone) infrastructure  .
+Addition of code to provision networking (VPC,subnet,NAT gateway, etc.) and DNS (Route53 - private hosted zone) infrastructure.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
