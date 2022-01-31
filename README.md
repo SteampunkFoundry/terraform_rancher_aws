@@ -51,7 +51,7 @@ Destroy complete! Resources: 25 destroyed.
 ```
 
 ## IN-PROGRESS
-Addition of code to provision networking (VPC,subnet,NAT gateway, etc.) and DNS (Route53 - private hosted zone) infrastructure  .
+Addition of code to provision networking (VPC,subnet,NAT gateway, etc.) and DNS (Route53 - private hosted zone) infrastructure.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
