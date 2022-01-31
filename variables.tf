@@ -67,7 +67,7 @@ variable "ssh_key_path" {
   sensitive   = true
 }
 variable "kubeconfig_path" {
-  description = "location of kubeconfig on local device executing Terraform. Kubeconfig is used to access the rancher server via kubectl."
+  description = "location of kubeconfig on local device executing Terraform. Kubeconfig is used to access the rancher server via kubectl. Note: if default path (~/.kube/config) is used, Terraform will overwrite any existing config."
   type        = string
   sensitive   = true
 }
