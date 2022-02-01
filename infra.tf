@@ -54,7 +54,7 @@ resource "aws_key_pair" "rancher_key" {
 resource "aws_instance" "rancher_server" {
   ami                    = data.aws_ami.ubuntu_20_04.id
   instance_type          = var.instance_type
-  key_name               = var.key_name
+  key_name               = aws_key_pair.rancher_key.key_name
   user_data              = templatefile("${path.module}/templates/userdata.tmpl",
     {
       docker_version = var.docker_version
@@ -87,7 +87,8 @@ resource "aws_instance" "rancher_server" {
 
   depends_on = [
     module.rancher_server_sg,
-    data.terraform_remote_state.vpc
+    data.terraform_remote_state.vpc,
+    aws_key_pair.rancher_key
   ]
 }
 
@@ -166,7 +167,8 @@ resource "null_resource" "get_rancher_kubeconfig" {
     EOT
   }
   depends_on = [
-    null_resource.wait_for_cloudinit
+    null_resource.wait_for_cloudinit,
+    local_file.rancher_ssh
   ]
 }
 

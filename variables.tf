@@ -23,10 +23,6 @@ variable "instance_username" {
   description = "username for ssh login"
   type        = string
 }
-variable "key_name" {
-  description = "ssh keypair name"
-  type        = string
-}
 variable "docker_version" {
   type        = string
   description = "Docker version to install on Rancher server"

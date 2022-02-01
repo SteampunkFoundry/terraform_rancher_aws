@@ -8,7 +8,6 @@ tags = {
 }
 
 name          = "webmod"
-key_name      = "webmod-rancher"
 instance_type = "t3a.medium"
 
 # Rancher variables
