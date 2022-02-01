@@ -15,9 +15,6 @@ data "aws_ami" "ubuntu_20_04" {
     values = ["*20.04 LTS*"]
   }
 }
-data "aws_vpc" "eks-rancher" {
-  id = var.vpc_id
-}
 data "aws_instance" "rancher_instance" {
   instance_id = aws_instance.rancher_server.id
 }
@@ -25,12 +22,38 @@ data "aws_kms_alias" "ebs" {
   name = "alias/aws/ebs"
 }
 data "aws_route53_zone" "dns" {
-  zone_id = "Z05090091HKD7D2WOJUY7"
+  zone_id = "Z094996227DIM7LY3S4VY"
+}
+
+resource "tls_private_key" "rancher_ssh_key" {
+  algorithm = "RSA"
+  rsa_bits = "4096"
+}
+
+resource "aws_secretsmanager_secret" "rancher_ssh_key" {
+  name = "webmod-rancher-ssh"
+  description = "Rancher server ssh key"
+  recovery_window_in_days = 0
+  tags = var.tags
+}
+
+resource "aws_secretsmanager_secret_version" "rancher_ssh_contents" {
+  secret_id = aws_secretsmanager_secret.rancher_ssh_key.id
+  secret_string = <<EOF
+   {
+    "rancher_ssh.pem": "${tls_private_key.rancher_ssh_key.private_key_pem}"
+   }
+  EOF
+}
+
+resource "aws_key_pair" "rancher_key" {
+  key_name = "${var.name}-rancher"
+  public_key = tls_private_key.rancher_ssh_key.public_key_openssh
+  tags = var.tags
 }
 resource "aws_instance" "rancher_server" {
   ami                    = data.aws_ami.ubuntu_20_04.id
   instance_type          = var.instance_type
-  private_ip             = var.private_ip
   key_name               = var.key_name
   user_data              = templatefile("${path.module}/templates/userdata.tmpl",
     {
@@ -47,12 +70,12 @@ resource "aws_instance" "rancher_server" {
   }
 
   vpc_security_group_ids = [module.rancher_server_sg.security_group_id]
-  subnet_id              = var.subnet_id
+  subnet_id              = element(data.terraform_remote_state.vpc.outputs.private_subnets, 0)
 
-  volume_tags = merge({"Name" = var.name}, var.tags)
+  volume_tags = merge({"Name" = "${var.name}-rancher-server"}, var.tags)
   tags = merge(
   {
-    "Name"              = var.name,
+    "Name"              = "${var.name}-rancher-server",
     "CustodianOffHours" = "off",
     "CustodianOnHours"  = "off"
   },
@@ -64,6 +87,7 @@ resource "aws_instance" "rancher_server" {
 
   depends_on = [
     module.rancher_server_sg,
+    data.terraform_remote_state.vpc
   ]
 }
 
@@ -73,12 +97,12 @@ module "rancher_server_sg" {
   create  = true
 
   use_name_prefix = true
-  name            = "${var.name}-sg"
+  name            = "${var.name}-rancher-server-sg"
   description     = "Security group for the Rancher Server EC2 instance"
-  vpc_id          = data.aws_vpc.eks-rancher.id
+  vpc_id          = data.terraform_remote_state.vpc.outputs.vpc_id
 
   egress_rules              = ["all-all"]
-  ingress_cidr_blocks       = [data.aws_vpc.eks-rancher.cidr_block]
+  ingress_cidr_blocks       = [data.terraform_remote_state.vpc.outputs.vpc_cidr_block]
   ingress_rules             = ["ssh-tcp", "https-443-tcp", "kubernetes-api-tcp"]
   ingress_with_cidr_blocks  = [
     {
@@ -86,11 +110,15 @@ module "rancher_server_sg" {
       to_port     = 0
       protocol    = "icmp"
       description = "Allow ping from within VPC"
-      cidr_blocks = data.aws_vpc.eks-rancher.cidr_block
+      cidr_blocks = data.terraform_remote_state.vpc.outputs.vpc_cidr_block
     }
   ]
 
   tags = var.tags
+
+  depends_on = [
+    data.terraform_remote_state.vpc
+  ]
 }
 
 resource "null_resource" "wait_for_cloudinit" {
@@ -102,14 +130,20 @@ resource "null_resource" "wait_for_cloudinit" {
     ]
     connection {
       type = "ssh"
-      host = var.private_ip
+      host = aws_instance.rancher_server.private_ip
       user = var.instance_username
-      private_key = file(var.ssh_key_path)
+      private_key = tls_private_key.rancher_ssh_key.private_key_pem
     }
   }
   depends_on = [
     aws_instance.rancher_server
   ]
+}
+
+resource "local_file" "rancher_ssh" {
+  sensitive_content = tls_private_key.rancher_ssh_key.private_key_pem
+  filename          = var.ssh_key_path
+  file_permission   = "644"
 }
 
 resource "null_resource" "get_rancher_kubeconfig" {
@@ -119,7 +153,7 @@ resource "null_resource" "get_rancher_kubeconfig" {
     environment = {
       username    = var.instance_username
       name        = var.name
-      host        = var.private_ip
+      host        = aws_instance.rancher_server.private_ip
       config_path = var.kubeconfig_path
       ssh_key     = var.ssh_key_path
     }
@@ -134,4 +168,12 @@ resource "null_resource" "get_rancher_kubeconfig" {
   depends_on = [
     null_resource.wait_for_cloudinit
   ]
+}
+
+resource "aws_route53_record" "rancher_endpoint" {
+  name    = var.rancher_server_dns
+  type    = "A"
+  ttl     = "300"
+  zone_id = data.aws_route53_zone.dns.zone_id
+  records = [aws_instance.rancher_server.private_ip]
 }

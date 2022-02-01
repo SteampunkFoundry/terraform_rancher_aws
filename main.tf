@@ -6,7 +6,24 @@ terraform {
     profile = "Webmod-Admin"
   }
 }
-
+data "terraform_remote_state" "vpc" {
+  backend = "s3"
+  config = {
+    bucket  = "webmod-tfstate"
+    key     = "infra/network"
+    region  = "us-east-1"
+    profile = var.profile
+  }
+}
+data "terraform_remote_state" "route53" {
+  backend = "s3"
+  config = {
+    bucket  = "webmod-tfstate"
+    key     = "infra/route53"
+    region  = "us-east-1"
+    profile = var.profile
+  }
+}
 provider "aws" {
   region = var.aws_region
   profile = var.profile
