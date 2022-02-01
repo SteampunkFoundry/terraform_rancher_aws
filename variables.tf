@@ -7,15 +7,7 @@ variable "profile" {
   type        = string
 }
 variable "name" {
-  description = "name prefix used for all resources"
-  type        = string
-}
-variable "vpc_id" {
-  description = "VPC id used for all resources"
-  type        = string
-}
-variable "subnet_id" {
-  description = "Subnet id used to deploy Rancher resources"
+  description = "name and/or name prefix for all resources"
   type        = string
 }
 variable "tags" {
@@ -33,10 +25,6 @@ variable "instance_username" {
 }
 variable "key_name" {
   description = "ssh keypair name"
-  type        = string
-}
-variable "private_ip" {
-  description = "private ip used for single-node rancher server"
   type        = string
 }
 variable "docker_version" {

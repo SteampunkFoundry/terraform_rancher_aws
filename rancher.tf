@@ -6,15 +6,15 @@ resource "random_password" "rancher_admin" {
   override_special = "!@#$%^&*"
 }
 
-resource "aws_secretsmanager_secret" "rancher" {
-  name = "RancherAdminTest2"
+resource "aws_secretsmanager_secret" "rancher_admin" {
+  name = "RancherAdministrator"
   description = "Rancher server admin user and password for ${var.rancher_server_dns}"
   recovery_window_in_days = 0
   tags = var.tags
 }
 
-resource "aws_secretsmanager_secret_version" "secret_contents" {
-  secret_id = aws_secretsmanager_secret.rancher.id
+resource "aws_secretsmanager_secret_version" "rancher_admin_contents" {
+  secret_id = aws_secretsmanager_secret.rancher_admin.id
   secret_string = <<EOF
    {
     "username": "admin",
@@ -63,8 +63,7 @@ resource "helm_release" "rancher_server" {
     value = "admin"
   }
   depends_on = [
-    helm_release.cert_manager,
-    random_password.rancher_admin
+    helm_release.cert_manager
   ]
 }
 
@@ -104,8 +103,8 @@ resource "rancher2_node_template" "node_template" {
     ami =  data.aws_ami.ubuntu_20_04.id
     region = var.aws_region
     security_group = ["rancher nodes"]
-    subnet_id = var.subnet_id
-    vpc_id = var.vpc_id
+    subnet_id = element(data.terraform_remote_state.vpc.outputs.public_subnets, 0)
+    vpc_id = data.terraform_remote_state.vpc.outputs.vpc_id
     zone = trimprefix(data.aws_instance.rancher_instance.availability_zone, var.aws_region)
     encrypt_ebs_volume = true
     iam_instance_profile = module.iam_role_child_clusters.iam_role_name
@@ -120,7 +119,7 @@ resource "rancher2_node_template" "node_template" {
 resource "rancher2_global_dns_provider" "route53" {
   provider = rancher2.admin
   name = "route53"
-  root_domain = "webmod.private"
+  root_domain = "webmod.dev"
   route53_config {
     access_key = rancher2_cloud_credential.cloud_credential.amazonec2_credential_config[0].access_key
     secret_key = rancher2_cloud_credential.cloud_credential.amazonec2_credential_config[0].secret_key
