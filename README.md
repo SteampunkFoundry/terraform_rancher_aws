@@ -20,6 +20,7 @@ terraform {
    Note: Two (2) variables were left out of terraform.tfvars file due to sensitivity and require input on command line (shown in Deploy Section)  
       1. `kubeconfig_path`
       2. `ssh_key_path`<br>
+5. Install Helm locally 
 ### Deploy
 ```console
 terraform init -var kubeconfig_path=</path/to/kubeconfig> -var ssh_key_path=</path/to/rancher/ec2/private/key>
@@ -49,6 +50,23 @@ After destroy is complete
 ```terraform
 Destroy complete! Resources: 25 destroyed.
 ```
+
+### ERRORS
+During deployment you may run into the following error block:
+```terraform
+╷
+│ Error: failed to download "https://charts.jetstack.io/charts/cert-manager-v1.6.1.tgz" at version "v1.6.1"
+│
+│   with helm_release.cert_manager,
+│   on rancher.tf line 26, in resource "helm_release" "cert_manager":
+│   26: resource "helm_release" "cert_manager" {
+│
+╵
+```
+This is an error caused by a cache directory for helm. To resolve this error run the following block below and reattempt terraform apply:
+```
+helm --kubeconfig </path/to/kubeconfig> repo update
+``` 
 
 ## IN-PROGRESS
 Addition of code to provision networking (VPC,subnet,NAT gateway, etc.) and DNS (Route53 - private hosted zone) infrastructure.

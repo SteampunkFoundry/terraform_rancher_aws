@@ -1,9 +1,18 @@
 terraform {
   backend "s3" {
     bucket = "webmod-tfstate"
-    key    = "infra/rancher"
+    key    = "infra/rancher2"
     region = "us-east-1"
-    profile = "Webmod-Admin"
+    profile = "webmod-admin"
+  }
+}
+data "terraform_remote_state" "rancher" {
+  backend = "s3"
+  config = {
+    bucket  = "webmod-tfstate"
+    key     = "infra/rancher"
+    region  = "us-east-1"
+    profile = var.profile
   }
 }
 data "terraform_remote_state" "vpc" {

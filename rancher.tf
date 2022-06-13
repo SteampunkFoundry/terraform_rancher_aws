@@ -7,7 +7,7 @@ resource "random_password" "rancher_admin" {
 }
 
 resource "aws_secretsmanager_secret" "rancher_admin" {
-  name = "RancherAdministrator"
+  name = "Rancher2Administrator"
   description = "Rancher server admin user and password for ${var.rancher_server_dns}"
   recovery_window_in_days = 0
   tags = var.tags
@@ -77,41 +77,25 @@ resource "rancher2_bootstrap" "admin" {
   ]
 }
 
+data "aws_secretsmanager_secret" "rancher_user_cli" {
+  arn = "arn:aws:secretsmanager:us-east-1:476269685748:secret:rancher-user-cli-JXDtI1"
+}
+
+data "aws_secretsmanager_secret_version" "rancher_user_cli_contents" {
+  secret_id = data.aws_secretsmanager_secret.rancher_user_cli.id
+}
+
 resource "rancher2_cloud_credential" "cloud_credential" {
   provider = rancher2.admin
   name = "rancher_cluster_credentials"
-  description = "Credentials for user ${module.rancher_user.iam_user_name}"
+  description = "Credentials for local iam user rancher"
   amazonec2_credential_config {
-    access_key = module.rancher_user.iam_access_key_id
-    secret_key = module.rancher_user.iam_access_key_secret
+    access_key = jsondecode(data.aws_secretsmanager_secret_version.rancher_user_cli_contents.secret_string)["access_key"]
+    secret_key = jsondecode(data.aws_secretsmanager_secret_version.rancher_user_cli_contents.secret_string)["secret_key"]
+
     default_region = var.aws_region
   }
   depends_on = [
     rancher2_bootstrap.admin,
-    module.rancher_user
   ]
 }
-
-#resource "rancher2_node_template" "node_template" {
-#  provider = rancher2.admin
-#  name = "wedbmod template"
-#  description = "Template used to provision WebMod cluster"
-#  engine_install_url = "https://releases.rancher.com/install-docker/${var.docker_version}.sh"
-#  amazonec2_config {
-#    access_key = rancher2_cloud_credential.cloud_credential.amazonec2_credential_config[0].access_key
-#    secret_key = rancher2_cloud_credential.cloud_credential.amazonec2_credential_config[0].secret_key
-#    ami =  data.aws_ami.ubuntu_20_04.id
-#    region = var.aws_region
-#    security_group = ["rancher nodes"]
-#    subnet_id = element(data.terraform_remote_state.vpc.outputs.public_subnets, 0)
-#    vpc_id = data.terraform_remote_state.vpc.outputs.vpc_id
-#    zone = trimprefix(data.aws_instance.rancher_instance.availability_zone, var.aws_region)
-#    encrypt_ebs_volume = true
-#    iam_instance_profile = module.iam_role_child_clusters.iam_role_name
-#    instance_type = var.instance_type
-#    kms_key = data.aws_kms_alias.ebs.target_key_id
-#    private_address_only = true
-#    volume_type = "gp3"
-#    tags = "Rancher Provisioned,true"
-#  }
-#}
