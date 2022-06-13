@@ -50,8 +50,7 @@ resource "aws_instance" "rancher_server" {
   tags = merge(
   {
     "Name"              = "${var.name}-rancher2-server",
-    "CustodianOffHours" = "off",
-    "CustodianOnHours"  = "off"
+    "CustodianOffHours" = "off=(M-F,18);on=(M-F,6)"
   },
   var.tags)
 
